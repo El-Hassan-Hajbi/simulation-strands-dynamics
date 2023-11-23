@@ -26,7 +26,15 @@ def beta(i, j, N):
         
 def alpha(i,j, omega, theta):
     N = len(theta)
-    return l*omega[i]*np.sin(theta[j] - theta[i])*beta(i, j, N)
+    return (l*omega[i]*np.sin(theta[j] - theta[i])*beta(i, j, N))/G(i, theta)
+def G(s, theta):
+    c = 0
+    for j in range(s, len(theta)):
+        for i in range(j):
+            c+= l*theta[i]*np.sin(theta[i] + theta[s])
+        c*= m*l
+    return -c    
+
 def implicit_step(X, delta, t, A, f):
     # Define the function to find the new state implicitly
     def equation(Y):
@@ -82,11 +90,11 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
                 c+=g*l*omega[s]*np.sin(theta[s])
                 for i in range(j):
                     c+=l*l*omega[i]*np.cos(theta[i]-theta[s])-2*l*omega[s]*omega[i]*np.sin(theta[i])*np.sin(theta[s])
-            f[s] = m*c - 2*k*theta[s]
+            f[s] = (m*c - 2*k*theta[s])/G(s, theta)
         #A = np.random.rand(N, N)  # Remplacez cela par votre matrice A
         #f = np.random.rand(N, 1)  # Remplacez cela par votre vecteur f
         if self.scheme=="explicit":
-            self.X += self.delta * F(self.X, self.it)
+            self.X += self.delta * F(self.X, self.it, A, f)
         elif self.scheme=="implicit":
             self.X = implicit_step(self.X, self.delta, self.it, A, f)
         
