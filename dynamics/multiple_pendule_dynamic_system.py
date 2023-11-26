@@ -3,7 +3,7 @@ from scipy.optimize import fsolve
 from .abstract_dynamic_system import AbstractDynamicSystem
 from scipy.integrate import odeint 
 
-g, l, m, k = 9.8, 0.2, 1, 10 # N/m
+g, l, m, k = 9.8, 1, 1, 1 # N/m
 
 def F(X, t, A, f):
     # X = (w1, .., wN, O1, .., ON)
@@ -44,6 +44,14 @@ def implicit_step(X, delta, t, A, f):
     X_new = fsolve(equation, X)
     return X_new
 
+def runge_kutta_step(X, delta, t, A, f):
+    k1 = F(X, t, A, f)
+    k2 = F(X + delta*k1/2, t + delta/2, A, f)
+    k3 = F(X + delta*k2/2, t + delta/2, A, f)
+    k4 = F(X + delta*k3, t + delta, A, f)
+
+    return X + delta * (k1/6 + k2/3 + k3/3 + k4/6)
+
 ## Dummy dynamic system just to test
 class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
 
@@ -72,7 +80,6 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
 
     
     def step(self):
-        
         N = len(self.THETA)
         A = np.zeros((N, N))
         omega, theta = self.X[:len(self.X)//2], self.X[len(self.X)//2:]
@@ -81,22 +88,26 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
                 if i == j:
                     A[i, j] = 1
                 else:
-                    A[i, j] = alpha(i=i,j=j, omega=omega, theta=theta)
+                    A[i, j] = (N-i)/(N-i+1)*np.cos(theta[j] - theta[i])
 
         f = np.zeros_like(self.THETA)
         for s in range(N):
-            c = 0
-            for j in range(s, N):
-                c+=g*l*omega[s]*np.sin(theta[s])
-                for i in range(j):
-                    c+=l*l*omega[i]*np.cos(theta[i]-theta[s])-2*l*omega[s]*omega[i]*np.sin(theta[i])*np.sin(theta[s])
-            f[s] = (m*c - 2*k*theta[s])/G(s, theta)
+            c = (g/l)*np.sin(theta[s])
+            tmp = 0
+            for j in range(N):
+                if j != s:
+                    tmp += omega[j]**2*np.sin(theta[j] - theta[s])
+            tmp *= (N-s)/(N-s+1)
+            c = (c + tmp ) # to add ressort  + 2*k*theta[s]/(m*l**2)
+            f[s] = -c
         #A = np.random.rand(N, N)  # Remplacez cela par votre matrice A
         #f = np.random.rand(N, 1)  # Remplacez cela par votre vecteur f
         if self.scheme=="explicit":
             self.X += self.delta * F(self.X, self.it, A, f)
         elif self.scheme=="implicit":
             self.X = implicit_step(self.X, self.delta, self.it, A, f)
+        elif self.scheme=="runge-kutta":
+            self.X = runge_kutta_step(self.X, self.delta, self.it, A, f)
         
         self.THETA = self.X[len(self.THETA):]
         

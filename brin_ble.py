@@ -16,6 +16,7 @@ def main():
                   bgColor = np.array([0.4, 0.4, 0.4]))
 
     # Loading the scene
+    # @ schemes : implicit / explicit / runge-kutta
     SystemPenduleTest(viewer, "implicit")
     
     # Main loop

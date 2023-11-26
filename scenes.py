@@ -147,10 +147,11 @@ def SystemPenduleTest(viewer, scheme):
     @ l : longueur de chaque rod
     @ THETA : vecteur des angles formées par le systeme de rods
     """
-    N = 7
-    l = 0.2
+    N = 1 # prendre N = 2 pour confirmer la dynamique
+    l = 1
+    angle = 7*np.pi/8 # 7*np.pi/8 : angle pour tester la simulation
     #THETA = np.random.uniform(0.0, 2 * np.pi, N)
-    THETA = np.array([np.pi] + (N-1)*[7*np.pi/8])
+    THETA = np.array(N*[angle]) 
     positions0 = np.array([0., 0.,   # x0, y0
                           0.5, 0.], # x1, y1
                          np.float64)
