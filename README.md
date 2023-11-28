@@ -13,3 +13,10 @@
 5 - friction and contact between strains during the dynamic (first detect the collision THEN add a response) * -> then do 3D
 
 7 - SoTA of wind chaotic dynamic .. (complex topic apparently)
+
+
+# Questions : 
+- on a vu que la dynamique d'un systeme de pendule est chaotique, comment remedier a ce pb pour notre approximation d'un brin de blé
+- doit on ajouter un terme de frottement : Rayleigh
+- on a besoin d'aide pour trouver une réponse adéquate à la collision pour notre systeme de brins de blé
+- Complexité de la detection de collision 

@@ -2,8 +2,9 @@ import numpy as np
 from scipy.optimize import fsolve
 from .abstract_dynamic_system import AbstractDynamicSystem
 from scipy.integrate import odeint 
+from collision import CollisionDetection
 
-g, l, m, k = 9.8, 1, 1, 1 # N/m
+g, l, m, k = 9.8, 1, 1, 10 # N/m
 
 def F(X, t, A, f):
     # X = (w1, .., wN, O1, .., ON)
@@ -78,6 +79,8 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         # Concatenate the two arrays horizontally
         self.X = np.concatenate([omega0, self.THETA])
 
+        # Collision detection and response
+        self.collisionOn = True
     
     def step(self):
         N = len(self.THETA)
@@ -98,7 +101,7 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
                 if j != s:
                     tmp += omega[j]**2*np.sin(theta[j] - theta[s])
             tmp *= (N-s)/(N-s+1)
-            c = (c + tmp ) # to add ressort  + 2*k*theta[s]/(m*l**2)
+            c = (c + tmp + 2*k*(theta[s] - np.pi)/(m*l**2)) # to add ressort  + 2*k*theta[s]/(m*l**2)
             f[s] = -c
         #A = np.random.rand(N, N)  # Remplacez cela par votre matrice A
         #f = np.random.rand(N, 1)  # Remplacez cela par votre vecteur f
@@ -122,7 +125,12 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         # updating time
         self.it += self.delta
 
-
+        # Collision
+        if self.collisionOn:
+            segs = [[(self.rods[i].positions[0], self.rods[i].positions[1]), (self.rods[i].positions[2], self.rods[i].positions[3])] for i in range(len(self.rods))]
+            collision, _ = CollisionDetection(segments=segs)
+            if collision : 
+                print("collision")
 
         """
         # Updating params theta using lagrangian + system resolution

@@ -41,6 +41,6 @@ class PenduleDynamicSystem(AbstractDynamicSystem):
         elif self.scheme=="implicit":
             self.X = implicit_step(self.X, self.delta, self.it)
         theta = self.X[0]
-        self.mesh.positions[2], self.mesh.positions[3] = l*np.sin(theta), l*(1-np.cos(theta))
+        self.mesh.positions[2], self.mesh.positions[3] = l*np.sin(theta), l*(1-np.cos(theta))   #-l*(np.cos(theta))
 		
         self.it += self.delta
