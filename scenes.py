@@ -149,29 +149,40 @@ def SystemPenduleTest(viewer, scheme):
     """
     N = 5 # prendre N = 2 pour confirmer la dynamique
     l = 1
-    angle = 7*np.pi/8 # np.pi/4 : angle pour tester la simulation
+    angle1 = 7*np.pi/8 # np.pi/4 : angle pour tester la simulation
+    angle2 = 10*np.pi/8
+    m = 2 # Number of steams
+    d = 0.5 # distance between two consecutive steams
     #THETA = np.random.uniform(0.0, 2 * np.pi, N)
-    THETA = np.array(N*[angle]) 
+    THETA = [np.array(N*[angle1]), np.array(N*[angle2])] 
     positions0 = np.array([0., 0.,   # x0, y0
                           0.5, 0.], # x1, y1
                          np.float64)
     colours = np.array([1., 0., 0.,
                         0., 1., 0.])
-    #print("Rendering", THETA)
-    positions0[2], positions0[3] = l*np.sin(THETA[0]), -l*np.cos(THETA[0])
-    rods = [Rod2D(positions0, colours)]
-    viewer.addRenderable(Rod2DRenderable(rods[0], thickness = 0.005))
-    for i in range(1, N):
-        positions = np.zeros(4)
-        positions[0], positions[1] = rods[i-1].positions[2], rods[i-1].positions[3] 
-        positions[2], positions[3] = positions[0]+l*np.sin(THETA[i]), positions[1]-l*np.cos(THETA[i])
-        rod = Rod2D(positions, colours)
-        rodRenderable = Rod2DRenderable(rod, thickness = 0.005)
-        viewer.addRenderable(rodRenderable)
-        rods.append(rod)
+
+    def steam_creator(x0, l, theta):
+        positions0 = np.array([x0] + 3*[0.], np.float64)
+        positions0[2], positions0[3] = x0 + l*np.sin(theta[0]), -l*np.cos(theta[0])
+        rods = [Rod2D(positions0, colours)]
+        viewer.addRenderable(Rod2DRenderable(rods[0], thickness = 0.005))
+        for i in range(1, N):
+            positions = np.zeros(4)
+            positions[0], positions[1] = rods[i-1].positions[2], rods[i-1].positions[3] 
+            positions[2], positions[3] = positions[0]+l*np.sin(theta[i]), positions[1]-l*np.cos(theta[i])
+            rod = Rod2D(positions, colours)
+            rodRenderable = Rod2DRenderable(rod, thickness = 0.005)
+            viewer.addRenderable(rodRenderable)
+            rods.append(rod)
+        return rods
+    
+    steams = []
+    for k in range(m):
+        rods_ = steam_creator(k*d, l, THETA[k])
+        steams.append(rods_)
 
 	# Create the dynamic system 
-    myDn = MultiplePenduleDynamicSystem(rods, THETA, scheme)
+    myDn = MultiplePenduleDynamicSystem(steams, THETA, scheme)
     
     # add it to the viewer
     viewer.addDynamicSystem(myDn)

@@ -20,30 +20,30 @@ def find_intersection(segment1, segment2):
     # Segments do not intersect
     return False, None
 
-def CollisionDetection(segments):
+def CollisionDetection(segments): # naive implementation, we can use Sweep and prune OR bounding volume hierarchy
     """
     @ params:
     @ segments : a list of segments, each segment is defined as two points (its upper and lower bound)
     This function returns a (collision : boolean, data) : true if there is a collision between at least two of the rods, false otherwise
     """
     intersections = []
+    stem1IDX, stem2IDX, rod1IDX, rod2IDX = [], [], [], []
+    for u in range(len(segments) - 1):
+        for v in range(u+1, len(segments)):
+            for i in range(len(segments[u])): # len(tigeu)
+                for j in range(len(segments[v])): # len(tigev)
+                    collision, intersection_point = find_intersection(segments[u][i], segments[v][j])
+                    if collision:
+                        intersections.append(intersection_point)
+                        stem1IDX.append(u)
+                        stem2IDX.append(v)
+                        rod1IDX.append(i)
+                        rod2IDX.append(j)
 
-    for i in range(len(segments) - 1): # len(tige1)
-        for j in range(i + 1, len(segments)): # len(tige2)
-            collision, intersection_point = find_intersection(segments[i], segments[j])
-            if collision:
-                intersections.append(intersection_point)
+    return (len(intersections)!=0), intersections, stem1IDX, stem2IDX, rod1IDX, rod2IDX
 
-    return (len(intersections)!=0), intersections
-    """
-    for seg1, seg2 in zip(tige1, tige2):
-        collision, intersection_point = find_intersection(segments[i], segments[j])
-            if collision:
-                intersections.append(intersection_point)
-    """
-
-
-
+def CollisionResponse():
+    pass
 
 if __name__ == "__main__":
     # Example usage:

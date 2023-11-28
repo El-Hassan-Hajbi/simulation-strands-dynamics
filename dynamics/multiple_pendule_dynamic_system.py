@@ -2,18 +2,15 @@ import numpy as np
 from scipy.optimize import fsolve
 from .abstract_dynamic_system import AbstractDynamicSystem
 from scipy.integrate import odeint 
-from collision import CollisionDetection
+from collision import CollisionDetection, CollisionResponse
 
-g, l, m, k = 9.8, 1, 1, 10 # N/m
+g, l, m, K, rayleigh_coeff, wind_coeff, wind_freq, xref = 9.8, 1, 1, 10, 0.1, 2, 1, 0.1 # N/m
 
 def F(X, t, A, f):
     # X = (w1, .., wN, O1, .., ON)
     H = (np.linalg.inv(A) @ f).flatten()
     N = len(X)//2
-    #print("N = ", N)
     W = X[:N]
-    #print("H = ",H)
-    #print("W = ",W)
     res=np.concatenate([H, W])
     return res
 
@@ -45,6 +42,7 @@ def implicit_step(X, delta, t, A, f):
     X_new = fsolve(equation, X)
     return X_new
 
+
 def runge_kutta_step(X, delta, t, A, f):
     k1 = F(X, t, A, f)
     k2 = F(X + delta*k1/2, t + delta/2, A, f)
@@ -56,36 +54,58 @@ def runge_kutta_step(X, delta, t, A, f):
 ## Dummy dynamic system just to test
 class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
 
-    def __init__(self, rods, THETA, scheme):
+    def __init__(self, stems, THETA, scheme):
         ## Constructor
         # @param self
         # @param mesh  
         # @param theta0  
         super().__init__()
-        self.rods = rods
-        self.THETA = THETA
-        self.THETA_deriv = [0]*len(THETA) # vecteur derive des angles
-        self.THETA_acc = [0]*len(THETA) # vecteur acceleration des angles
+        self.stems = stems # list of stems : [rods_1st_stem, rods_2nd_stem ...]
+        self.THETA = THETA # list of angles for each steam : [THETA_1st_steam, THETA_2nd_steam ...]
 
         self.scheme = scheme
+
         # Animations parameters
         self.it = 60.
         self.delta = 0.01
         self.period = 120.
         self.theta0 = THETA[0]
-       # Create an array of zeros with the same length
-        omega0 = np.zeros_like(self.THETA)
+
+        # Create an array of zeros with the same length
+        omega0 = np.zeros_like(self.THETA[0])
 
         # Concatenate the two arrays horizontally
-        self.X = np.concatenate([omega0, self.THETA])
+        self.X = [np.concatenate([omega0, self.THETA[k]]) for k in range(len(self.stems))]
 
         # Collision detection and response
         self.collisionOn = True
     
-    def step(self):
-        N = len(self.THETA)
+    def f_vector(self, theta, omega):
+        N = len(theta)
+        f = np.zeros_like(theta)
+        for s in range(N):
+            c = (g/l)*np.sin(theta[s])
+            tmp = 0
+            rayleigh_damping = 0
+            for j in range(N):
+                if j != s:
+                    tmp += omega[j]**2*np.sin(theta[j] - theta[s])
+                # -------- Rayleigh Damping ---------
+                if j <= s:
+                    rayleigh_damping -= -rayleigh_coeff*l*N*np.cos(theta[j] - theta[s])*omega[j]
+                if j > s:
+                    rayleigh_damping -= -rayleigh_coeff*l*(N - j + s)*np.cos(theta[j] - theta[s])*omega[j]
+            tmp *= (N-s)/(N-s+1)
+            ressort_elastic = 2*K*(theta[s] - np.pi)/(m*l**2)
+            wind_action = wind_coeff*np.sin(wind_freq*self.it)*s*(l*np.sin(theta[s]) - xref)
+            c = (c + tmp + ressort_elastic + rayleigh_damping + wind_action) # to add ressort  + 2*k*theta[s]/(m*l**2)
+            f[s] = -c
+        
+        return f
+    
+    def A_matrix(self, theta):
+        N = len(theta)
         A = np.zeros((N, N))
-        omega, theta = self.X[:len(self.X)//2], self.X[len(self.X)//2:]
         for i in range(N):
             for j in range(N):
                 if i == j:
@@ -93,79 +113,44 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
                 else:
                     A[i, j] = (N-i)/(N-i+1)*np.cos(theta[j] - theta[i])
 
-        f = np.zeros_like(self.THETA)
-        for s in range(N):
-            c = (g/l)*np.sin(theta[s])
-            tmp = 0
-            for j in range(N):
-                if j != s:
-                    tmp += omega[j]**2*np.sin(theta[j] - theta[s])
-            tmp *= (N-s)/(N-s+1)
-            c = (c + tmp + 2*k*(theta[s] - np.pi)/(m*l**2)) # to add ressort  + 2*k*theta[s]/(m*l**2)
-            f[s] = -c
-        #A = np.random.rand(N, N)  # Remplacez cela par votre matrice A
-        #f = np.random.rand(N, 1)  # Remplacez cela par votre vecteur f
-        if self.scheme=="explicit":
-            self.X += self.delta * F(self.X, self.it, A, f)
-        elif self.scheme=="implicit":
-            self.X = implicit_step(self.X, self.delta, self.it, A, f)
-        elif self.scheme=="runge-kutta":
-            self.X = runge_kutta_step(self.X, self.delta, self.it, A, f)
-        
-        self.THETA = self.X[len(self.THETA):]
-        
-        #print("dynamic =", self.THETA)
-        
-        # Updating positions of all the rods
-        self.rods[0].positions[2], self.rods[0].positions[3] = l*np.sin(self.THETA[0]), -l*np.cos(self.THETA[0])
-        for i, rod in enumerate(self.rods[1:]):
-            rod.positions[0], rod.positions[1] = self.rods[i-1 + 1].positions[2], self.rods[i-1 + 1].positions[3] # The first extremite should match with the last extremite of the previous rod
-            rod.positions[2], rod.positions[3] = rod.positions[0]+l*np.sin(self.THETA[i + 1]), rod.positions[1]-l*np.cos(self.THETA[i + 1]) # The other extremite of the ith rod should be updated knowing the updated value of theta
+        return A
+
+    def step(self):
+        N = len(self.THETA[0])
+        for k in range(len(self.stems)):
+            omega, theta = self.X[k][:len(self.X[k])//2], self.X[k][len(self.X[k])//2:]
+
+            A = self.A_matrix(theta)
+
+            f = self.f_vector(theta, omega)
+            
+            if self.scheme=="explicit":
+                self.X[k] += self.delta * F(self.X[k], self.it, A, f)
+            elif self.scheme=="implicit":
+                self.X[k] = implicit_step(self.X[k], self.delta, self.it, A, f)
+            elif self.scheme=="runge-kutta":
+                self.X[k] = runge_kutta_step(self.X[k], self.delta, self.it, A, f)
+            
+            self.THETA[k] = self.X[k][N:]
+            
+        for j in range(len(self.stems)):
+            # Updating positions of all the rods
+            self.stems[j][0].positions[2], self.stems[j][0].positions[3] = self.stems[j][0].positions[0] + l*np.sin(self.THETA[j][0]), -l*np.cos(self.THETA[j][0])
+            for i, rod in enumerate(self.stems[j][1:]):
+                rod.positions[0], rod.positions[1] = self.stems[j][i-1 + 1].positions[2], self.stems[j][i-1 + 1].positions[3] # The first extremite should match with the last extremite of the previous rod
+                rod.positions[2], rod.positions[3] = rod.positions[0]+l*np.sin(self.THETA[j][i + 1]), rod.positions[1]-l*np.cos(self.THETA[j][i + 1]) # The other extremite of the ith rod should be updated knowing the updated value of theta
         
         # updating time
         self.it += self.delta
 
         # Collision
         if self.collisionOn:
-            segs = [[(self.rods[i].positions[0], self.rods[i].positions[1]), (self.rods[i].positions[2], self.rods[i].positions[3])] for i in range(len(self.rods))]
-            collision, _ = CollisionDetection(segments=segs)
+            segs = [[[(self.stems[j][i].positions[0], self.stems[j][i].positions[1]), (self.stems[j][i].positions[2], self.stems[j][i].positions[3])] for i in range(len(self.stems[0]))] for j in range(len(self.stems))]
+            collision, intersections_point, stem1IDX, stem2IDX, rod1IDX, rod2IDX = CollisionDetection(segments=segs)
             if collision : 
-                print("collision")
-
-        """
-        # Updating params theta using lagrangian + system resolution
-        def Lagrangian(theta, theta_deriv, theta_acc):
-        
-            Params 
-            @ theta : vecteur des angles
-            @ theta_deriv : vecteur derive des angles
-            @ theta_acc : vecteur acceleration des angles
-       
-            v = [0]*len(theta) # vecteur norme au carré des vitesse generalisee 
-            a = v # vecteur derive de la norme au carré des vitesse generalisee 
-
-            v[0] = (l*theta_deriv[0])**2
-            for i in range(1, len(theta)):
-                v[i] = v[i-1] + (l*theta_deriv[i])**2 + 2*np.cos(theta[i] - theta[i-1])*np.sqrt(v[i-1])*l*theta_deriv[i]
-                a[i] = a[i-1] + 2*l**2*theta_deriv[i]*theta_acc[i] - 2*(theta_deriv[i] - theta_deriv[i-1])*np.sin(theta[i] - theta[i-1])*l*theta_deriv[i]*v[i-1] + 2*np.cos(theta[i] - theta[i-1])*l*v[i-1]*theta_acc[i] + 2*np.cos(theta[i] - theta[i-1])*l*a[i-1]*theta_deriv[i]
-
-    def system_pendulum(self, u, t, m, l, g, k):
-        #du = derivatives
-        # u = variables
-        # p = parameters
-        # t = time variable
-        
-        du = np.zeros(2*len(self.THETA))
-    
-        
-        c = np.cos(u[:-2:2] - u[2::2]) # intermediate variables cos(thetai - theta(i+1))
-        s = np.sin(u[:-2:2] - u[2::2])  # intermediate variables sin(thetai - theta(i+1))
-
-        
-        du[0:-2:2] = u[1:-1:2]   # d(theta) = omega
-        du[1] = (2*k/(m*l**2))*u[0] - (g/l)*np.sin(u[0])# dd(theta0)
-        for i in range(1, len(self.THETA)):
-            du[2*i+1] = ( m2*g*np.sin(u[2])*c - m2*s*(L1*c*u[1]**2 + L2*u[3]**2) - (m1+m2)*g*np.sin(u[0]) ) /( L1 *(m1+m2*s**2) ) # acceleration angulaire
-        
-        return du       
-        """
+                print("intersection points = ", intersections_point)
+                print("stem 1 IDX of intersection = ", stem1IDX)
+                print("stem 2 IDX of intersection = ", stem2IDX)
+                print("rod 1 IDX of intersection = ", rod1IDX)
+                print("rod 2 IDX of intersection = ", rod2IDX)
+                Fcol = CollisionResponse()
