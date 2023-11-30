@@ -78,7 +78,7 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         self.X = [np.concatenate([omega0, self.THETA[k]]) for k in range(len(self.stems))]
 
         # Collision detection and response
-        self.collisionOn = True
+        self.collisionDetectionOn, self.collisionResponseOn = True, False
     
     def f_vector(self, theta, omega):
         N = len(theta)
@@ -144,7 +144,7 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         self.it += self.delta
 
         # Collision
-        if self.collisionOn:
+        if self.collisionDetectionOn:
             segs = [[[(self.stems[j][i].positions[0], self.stems[j][i].positions[1]), (self.stems[j][i].positions[2], self.stems[j][i].positions[3])] for i in range(len(self.stems[0]))] for j in range(len(self.stems))]
             collision, intersections_point, stem1IDX, stem2IDX, rod1IDX, rod2IDX = CollisionDetection(segments=segs)
             if collision : 
@@ -153,4 +153,11 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
                 print("stem 2 IDX of intersection = ", stem2IDX)
                 print("rod 1 IDX of intersection = ", rod1IDX)
                 print("rod 2 IDX of intersection = ", rod2IDX)
-                Fcol = CollisionResponse()
+                if self.collisionResponseOn:
+                # ----------- Compute impulse response
+                    Fcol = CollisionResponse()
+                    # ----------- Update angular velocities of interesected rods
+                    for s in range(len(intersections_point)): 
+                        omega1, omega2 = self.X[stem1IDX[s]][:len(self.X[0])//2], self.X[stem2IDX[s]][:len(self.X[0])//2]
+                        omega1[rod1IDX[s]] = -omega1[rod1IDX[s]]
+                        omega2[rod2IDX[s]] = -omega2[rod2IDX[s]]
