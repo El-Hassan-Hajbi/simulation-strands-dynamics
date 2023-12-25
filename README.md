@@ -32,6 +32,12 @@ def strand_creator(x0, l, theta):
 ### II - Implementing the lagrangian dynamic of one strand
 
 ### III - Testing the rendering and dynamic with multiple strands
+Parameters choosed : 
+- m = 15 (Number of strands)
+- N = 6 (Number of rods / degrees of freedom)
+- $\theta_{1:N}^0 = \frac{7\pi}{8}$ (Initial angles)
+
+![](dynamic.mov)
 
 ### VI - Forced wind 
 adding a sinusoidal forced wave to simulate the wind (naive approach)
