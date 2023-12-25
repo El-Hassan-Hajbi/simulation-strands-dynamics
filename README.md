@@ -140,6 +140,17 @@ Parameters choosed :
 
 ### IV - Friction and contact between strands during the dynamic
 
+**DFCP (Discrete Frictional Contact Problem):**
+![](DFCP.png)
+
+Where $r_c = \delta t f_c$ is the collision response
+
+$W = H_cM_c^{-1}H_c^T $ is the delassus operator (square matrix of length $2*nContacts$)
+
+![](M_H_matrix.png)
+
+$b = H_cv^n(+ M^{-1}F_{ext} \delta t)$ :warning:
+
 
 
 
