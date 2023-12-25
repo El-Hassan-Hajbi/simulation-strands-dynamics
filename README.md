@@ -14,6 +14,8 @@
 
 7 - SoTA of wind chaotic dynamic .. (complex topic apparently)
 
+![](video.mov)
+
 
 # Questions : 
 - doit on ajouter un terme de frottement : Rayleigh
