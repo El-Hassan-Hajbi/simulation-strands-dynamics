@@ -122,6 +122,7 @@ Where $$f_s = -[(N-s+1)mglsin\theta_s + ml(N-s)\sum_{j \neq s}^N \dot{\theta_j}^
 
 So far, we found that the dynamic of a strand (approximated by an articulated system of pendulums and springs) subject to external forces (wind, gravity and rayleigh damping) is given by $M\ddot\Theta=F$ where $M$ is called mass/inertia matrix of the strand/solid
 
+![](video.mov)
 
 ### III - Testing the rendering and dynamic with multiple strands
 Parameters choosed : 
@@ -136,7 +137,6 @@ Parameters choosed :
 
 
 
-![](video.mov)
 
 ## `Project Organization`
 
