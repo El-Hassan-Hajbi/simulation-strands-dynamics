@@ -67,20 +67,15 @@ Where $p_{\theta_{s}} = \frac{\partial L}{\partial \dot{\theta_{s}}}$ and $L = T
 - $V$ is the potential energy of the system
 
 Note that 
-$$
-\begin{align*}
-x_{1} &= l\sin\theta_{1}\\
-y_{1} &= -l\cos\theta_{1}\\
-x_{i} &= x_{i-1} + l\sin\theta_{i}\\
-y_{i} &= y_{i-1} - l\cos\theta_{i}\\
-\end{align*}
-$$
 
+<p align="center">
+  <img src="note.png" alt="Image Alt Text">
+</p>
 Kinetic : 
 
 $$T = \frac{1}{2}mv_{1}^2 + ... + \frac{1}{2}mv_{N}^2$$
 
-$$T = \frac{1}{2}m(\dot{x}_{1}^2 + \dot{y}_{1}^2) + ... + \frac{1}{2}m(\dot{x}_{N}^2 + \dot{y}_{N}^2)$$
+$$T = \frac{1}{2}m(\dot x_1^2 + \dot y_1^2) + ... + \frac{1}{2}m(\dot x_N^2 + \dot y_N^2)$$
 
 $$\frac{\partial T}{\partial {\theta_{s}}} = ml\sum_{j=s}^{N}[- \dot{\theta_{s}}sin(\theta_{s})\dot{x_{j}} + \dot{\theta_{s}}cos(\theta_{s})\dot{y_{j}}]$$
 
@@ -116,13 +111,23 @@ $$ml^2(N-s+1)\ddot{\theta_s} + \sum_{j \neq s}^N ml^2(N-s)cos(\theta_j - \theta_
 
 We can rewrite this in its matrix form 
 
-![](system_dynamic.png)
+![system matrix](system_dynamic.png)
 
 Where $$f_s = -[(N-s+1)mglsin\theta_s + ml(N-s)\sum_{j \neq s}^N \dot{\theta_j}^2 sin(\theta_j - \theta_s) + 2K(\theta_s-\pi) + \gamma \sin(\omega t) (l\sin\theta_s - x_{ref})s + ]$$
 
 So far, we found that the dynamic of a strand (approximated by an articulated system of pendulums and springs) subject to external forces (wind, gravity and rayleigh damping) is given by $M\ddot\Theta=F$ where $M$ is called mass/inertia matrix of the strand/solid
 
-![](video.mov)
+Parameters choosed :
+- $g = 9.8$ (gravity constant)
+- $l = 1$ (length of each pendulum/rod)
+- $m = 1$ (mass of each pendulum/rod)
+- $K = 10$ (Constant of the springs, $K_{\infin} \iff $ no mouvement)
+- $\beta = 0.1$ (Rayleigh coefficient for damping)
+- $\gamma = 2$ (wind sinusiodal amplitude)
+- $\omega = 1 $ (wind sinusiodal frequency)
+- $x_{ref} = 0.1$ (x-axis reference position for wind potential) 
+
+![dynamics](video.mov)
 
 ### III - Testing the rendering and dynamic with multiple strands
 Parameters choosed : 
@@ -130,7 +135,7 @@ Parameters choosed :
 - $N = 6$ (Number of rods / degrees of freedom)
 - $\theta_{1:N}^0 = \frac{7\pi}{8}$ (Initial angles)
 
-![](dynamic.mov)
+![multiple strands](dynamic.mov)
 
 
 ### IV - Friction and contact between strands during the dynamic
