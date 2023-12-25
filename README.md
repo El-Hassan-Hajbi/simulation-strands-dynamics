@@ -16,9 +16,18 @@
 
 ![](video.mov)
 
+## `Project Organization`
 
-# Questions : 
-- doit on ajouter un terme de frottement : Rayleigh
-- Complexité de la detection de collision : Sweep and prune - autre algo 
-- on a besoin d'aide pour trouver une réponse adéquate à la collision pour notre systeme de brins de blé : prochain cours peut etre
-- on a vu que la dynamique d'un systeme de pendule est chaotique, comment remedier a ce pb pour notre approximation d'un brin de blé 
+- `brin_blé.py`: Main source code file containing the simulation
+- `geom/`: Folder containing geometry objects
+- `graphics/`: Folder containing renderable objects, shader ...
+- `mesh/`: Folder containing mesh obj
+- `dynamics/`: Folder containing dynamics classes
+- `pydfcp/`: Folder containing DFCP optimizer
+
+
+
+## `Next step`
+- Enhance collision detection speed by implementing optimized algorithms such as Sweep and Prune.
+- Previously, we approximated a stream using an articulated system of multiple pendulums and springs. Now, let's explore another sophisticated approximation and compare the results.
+- Expand the simulation from 2D to 3D.
