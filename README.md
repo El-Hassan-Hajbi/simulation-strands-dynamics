@@ -151,7 +151,9 @@ $W = H_cM_c^{-1}H_c^T $ is the delassus operator (square matrix of length $2*nCo
 
 $b = H_cv^n(+ M^{-1}F_{ext} \delta t)$ :warning:
 
-
+Where <p align="center">
+  <img src="v.png" height="100" alt="Image Alt Text">
+</p>
 
 
 ## `Project Organization`

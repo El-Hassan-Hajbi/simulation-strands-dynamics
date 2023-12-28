@@ -152,15 +152,18 @@ def SystemPenduleTest(viewer, scheme):
     angle1 = 7*np.pi/8 # np.pi/4 : angle pour tester la simulation
     angle2 = 10*np.pi/8
     m = 2 # Number of steams
-    d = 0.5 # distance between two consecutive steams
+    d = 0.3 # distance between two consecutive steams
     #THETA = np.random.uniform(0.0, 2 * np.pi, N)
-    THETA = [np.array(N*[angle1]), np.array(N*[angle2])] 
-    #THETA = m*[np.array(N*[angle1])] 
+    #THETA = [np.array(N*[angle1]), np.array(N*[angle2])] 
+    THETA = m*[np.array(N*[angle1])] 
     positions0 = np.array([0., 0.,   # x0, y0
                           0.5, 0.], # x1, y1
                          np.float64)
-    colours = np.array([1., 0., 0.,
-                        0., 1., 0.])
+    #colours = np.array([1., 0., 0.,
+    #                    0., 1., 0.])
+
+    colours = np.array([0.9, 0.8, 0.2,  # Red, Green, Blue for a yellowish color
+                    0., 1., 0.])   
 
     def steam_creator(x0, l, theta):
         positions0 = np.array([x0] + 3*[0.], np.float64)

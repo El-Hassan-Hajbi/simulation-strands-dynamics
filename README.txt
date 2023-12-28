@@ -1,2 +1,0 @@
- - rendering a system of N rods
- - implementing the lagrangian dynamic of this system with only one strain (N rods - 1 strain)
