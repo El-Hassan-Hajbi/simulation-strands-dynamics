@@ -110,7 +110,7 @@ class Viewer:
         self.renderables = []
 
         # Dynamic systems
-        self.dynamicOn = True
+        self.dynamicOn = False
         self.dynamicSystems = []
 
         # Camera

@@ -147,14 +147,16 @@ def SystemPenduleTest(viewer, scheme):
     @ l : longueur de chaque rod
     @ THETA : vecteur des angles formées par le systeme de rods
     """
-    N = 5 # prendre N = 2 pour confirmer la dynamique
+    N = 2 # prendre N = 2 pour confirmer la dynamique
     l = 1
-    angle1 = 7*np.pi/8 # np.pi/4 : angle pour tester la simulation
-    angle2 = 10*np.pi/8
+    angle1 = 8*np.pi/8 # np.pi/4 : angle pour tester la simulation
+    angle2 = 8.8*np.pi/8
+    angle3 = np.pi
     m = 2 # Number of steams
-    d = 0.3 # distance between two consecutive steams
+    #d = 0.3 # distance between two consecutive steams
+    d=0
     #THETA = np.random.uniform(0.0, 2 * np.pi, N)
-    #THETA = [np.array(N*[angle1]), np.array(N*[angle2])] 
+    #THETA = [np.array(N*[angle1]), np.array([angle2]+(N-1)*[angle3])] 
     THETA = m*[np.array(N*[angle1])] 
     positions0 = np.array([0., 0.,   # x0, y0
                           0.5, 0.], # x1, y1
@@ -186,7 +188,7 @@ def SystemPenduleTest(viewer, scheme):
         steams.append(rods_)
 
 	# Create the dynamic system 
-    myDn = MultiplePenduleDynamicSystem(steams, THETA, scheme)
+    myDn = MultiplePenduleDynamicSystem(steams, THETA, scheme, viewer)
     
     # add it to the viewer
     viewer.addDynamicSystem(myDn)

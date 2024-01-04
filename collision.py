@@ -14,11 +14,17 @@ def calculer_normale(direction):
     return normale / np.linalg.norm(normale)
 
 def find_intersection(segment1, segment2):
+
     x1, y1 = segment1[0]
     x2, y2 = segment1[1]
     x3, y3 = segment2[0]
     x4, y4 = segment2[1]
 
+    if segment1 == segment2: # intersections en tous les points 
+        t = calculer_direction(*segment1[0], *segment1[1]) # Replace with your actual tangent vector
+        n = calculer_normale(t)
+        return True, ((x1+x2)/2, (y1+y2)/2), t, n
+    
     # Parametric equations for the lines
     denum = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
     if denum != 0:
@@ -30,10 +36,12 @@ def find_intersection(segment1, segment2):
             # Calculate the intersection point
             intersection_x = x1 + ua * (x2 - x1)
             intersection_y = y1 + ua * (y2 - y1)
-            return True, (intersection_x, intersection_y)
+            t = calculer_direction(*segment1[0], *segment1[1]) # Replace with your actual tangent vector
+            n = calculer_normale(t)
+            return True, (intersection_x, intersection_y), t, n
     
     # Segments do not intersect
-    return False, None
+    return False, None, None, None
 
 class Collision:
     def __init__(self, t, n, solids, rods):
@@ -41,8 +49,10 @@ class Collision:
         self.n = n
         self.solids = solids
         self.rods = rods
+    def print(self):
+        print("rods in collision are :",self.rods,"\n")
 
-def CollisionDetection(segments):
+def CollisionDetection(segments, viewer):
     """
     @params:
     - segments: a list of segments, each segment is defined as two points (its upper and lower bound)
@@ -57,13 +67,12 @@ def CollisionDetection(segments):
         for v in range(u + 1, len(segments)):
             for i in range(len(segments[u])):
                 for j in range(len(segments[v])):
-                    collision, intersection_point = find_intersection(segments[u][i], segments[v][j])
+                    collision, intersection_point, t, n = find_intersection(segments[u][i], segments[v][j])
                     if collision:
-                        t = np.array([1.0, 0.0])  # Replace with your actual tangent vector
-                        n = np.array([0.0, 1.0])  # Replace with your actual normal vector
+                        #t = np.array([1.0, 0.0])  # Replace with your actual tangent vector
+                        #n = np.array([0.0, 1.0])  # Replace with your actual normal vector
                         #seg = segments[u][i]
-                        #t = calculer_direction(*seg[0], *seg[1]) # Replace with your actual tangent vector
-                        #n = calculer_normale(t)
+                        
                         collision_obj = Collision(t, n, (u, v), (i, j))
                         collisions.append(collision_obj)
 
@@ -125,6 +134,7 @@ def CollisionResponse(ndl, collisions, index_mapping, THETA,dt,qqDot, verbose=0)
 
     # Instantiate FischerBurmeister class
     nContacts = len(collisions)  # Adjust as needed
+    #print(nContacts)
     mu = 0.5  # Adjust as needed
     A = A.toarray()
     if(verbose):
@@ -153,13 +163,13 @@ def CollisionResponse(ndl, collisions, index_mapping, THETA,dt,qqDot, verbose=0)
 
 if __name__ == "__main__":
     # Example usage:
-    segment1 = [(0, 0), (2, 2)]
-    segment2 = [(1, 1), (3, 3)]
-    segment3 = [(0, 2), (2, 0)]
+    rod1 = [(0, 0), (2, 2)]
+    rod2 = [(2, 2), (3, 3)]
+    strand = [rod1, rod2]
 
-    collision, intersection_point = CollisionDetection([segment1, segment3])
+    boolean, collisions, index_map = CollisionDetection([strand, strand])
 
-    if collision:
-        print("Segments intersect at:", intersection_point)
+    if boolean:
+        print("Segments intersect")
     else:
         print("Segments do not intersect.")

@@ -54,7 +54,7 @@ def runge_kutta_step(X, delta, t, A, f):
 ## Dummy dynamic system just to test
 class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
 
-    def __init__(self, stems, THETA, scheme):
+    def __init__(self, stems, THETA, scheme, viewer):
         ## Constructor
         # @param self
         # @param mesh  
@@ -64,13 +64,15 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         self.THETA = THETA # list of angles for each steam : [THETA_1st_steam, THETA_2nd_steam ...]
 
         self.scheme = scheme
+        self.viewer = viewer
 
         # Animations parameters
         self.it = 60.
-        self.delta = 0.01
+        self.delta = 0.005
         self.period = 120.
         self.theta0 = THETA[0]
-
+        self.cpt = 0
+        self.e = 1 # coefficient of elasticity / restitution
         # Create an array of zeros with the same length
         omega0 = np.zeros_like(self.THETA[0])
 
@@ -119,18 +121,25 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
         # Degrees of freedom
         N = len(self.THETA[0])
         # Collision
-        fc = [np.zeros(N) for k in range(len(self.stems))]
+        fc = [N*[0] for k in range(len(self.stems))]
+        #print(len(fc[0]))
         if self.collisionDetectionOn:
+            
             segs = [[[(self.stems[j][i].positions[0], self.stems[j][i].positions[1]), (self.stems[j][i].positions[2], self.stems[j][i].positions[3])] for i in range(len(self.stems[0]))] for j in range(len(self.stems))]
-            boolean, collisions, index_maping = CollisionDetection(segments=segs)
-            if boolean :        
+            boolean, collisions, index_maping = CollisionDetection(segments=segs, viewer=self.viewer)
+            if boolean :     
+                self.cpt+=1
+                print(f"The {self.cpt}th collision")
+                for col in collisions:
+                    col.print()
                 if self.collisionResponseOn:
                 # ----------- Compute impulse response
                     rc = CollisionResponse(ndl=N, collisions=collisions, index_mapping=index_maping, THETA=self.THETA, dt=self.delta, qqDot=self.X)
-                    f_collision = rc/self.delta # rc = dt * fc
+                    f_collision = self.e*rc/self.delta # rc = dt * fc
                     for i, index_solid_contact in enumerate(list(index_maping)):
-                        fc[index_solid_contact] = f_collision[i:i+N]
-
+                        fc[index_solid_contact] = f_collision[i*N:N*(i+1)]
+                        
+        #print(len(fc[0]))
 
         # Dynamics + rc (Signorini - Coulomb)          
         for k in range(len(self.stems)):
@@ -140,6 +149,7 @@ class MultiplePenduleDynamicSystem(AbstractDynamicSystem):
 
             f = self.f_vector(theta, omega)
             
+            #print(k, len(f), len(fc[k]))
             # scheme
             if self.scheme=="explicit":
                 self.X[k] += self.delta * F(self.X[k], self.it, M, f+fc[k])
