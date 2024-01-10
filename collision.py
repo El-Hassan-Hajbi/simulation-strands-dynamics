@@ -3,6 +3,9 @@ from pydfcp.src.fischerburmeister import *
 from pydfcp.src.nsnewton import *
 from utils import H_c, M_c
 import scipy
+from graphics import *
+from geom import *
+import time
 
 def calculer_direction(x1, y1, x2, y2):
     direction = np.array([x2 - x1, y2 - y1])
@@ -36,8 +39,9 @@ def find_intersection(segment1, segment2):
             # Calculate the intersection point
             intersection_x = x1 + ua * (x2 - x1)
             intersection_y = y1 + ua * (y2 - y1)
-            t = calculer_direction(*segment1[0], *segment1[1]) # Replace with your actual tangent vector
-            n = calculer_normale(t)
+            #t = -calculer_direction(*segment1[0], *segment1[1]) # Replace with your actual tangent vector
+            t = -calculer_direction(*segment2[0], *segment2[1]) # Replace with your actual tangent vector
+            n = -calculer_normale(t)
             return True, (intersection_x, intersection_y), t, n
     
     # Segments do not intersect
@@ -72,6 +76,11 @@ def CollisionDetection(segments, viewer):
                         #t = np.array([1.0, 0.0])  # Replace with your actual tangent vector
                         #n = np.array([0.0, 1.0])  # Replace with your actual normal vector
                         #seg = segments[u][i]
+                        colours = np.array([255, 255, 255,  # Red, Green, Blue for a yellowish color
+                    0., 1., 0.])
+                        renderable = Rod2DRenderable(Rod2D(np.array([intersection_point[0], intersection_point[1],  n[0]+intersection_point[0], n[1]+intersection_point[1]],np.float64),colours), thickness = 0.005)
+                        #viewer.addRenderable(renderable)
+                        #time.sleep(3)
                         
                         collision_obj = Collision(t, n, (u, v), (i, j))
                         collisions.append(collision_obj)

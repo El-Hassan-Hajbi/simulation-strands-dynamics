@@ -122,10 +122,10 @@ def test_sparse_matrix():
 
 if __name__ == "__main__":
     # Tests
-    H_sparse = test_Mc()
+    H_sparse = test_Hc()
     print(H_sparse)
 
     plt.figure(figsize=(8, 8))
     plt.spy(H_sparse, markersize=10)
-    plt.title('Sparse Matrix Visualization')
+    plt.title('Hc')
     plt.show()

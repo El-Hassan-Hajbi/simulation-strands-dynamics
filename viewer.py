@@ -189,6 +189,12 @@ class Viewer:
         # @param self
         # @param renderables
         self.renderables.extend(renderables) 
+
+    def RemoveRenderable(self, *renderables):
+        ## Add new renderables to render
+        # @param self
+        # @param renderables
+        self.renderables.remove(renderables) 
         
 
     def addDynamicSystem(self, *ds):
